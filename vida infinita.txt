@@ -1,0 +1,16 @@
+-- Função para manter a vida sempre no máximo
+local player = game.Players.LocalPlayer
+local character = player.Character or player.CharacterAdded:Wait()
+local humanoid = character:WaitForChild("Humanoid")
+
+-- Função para redefinir a vida quando ela diminui
+local function tornarImortal()
+    humanoid.Health = humanoid.MaxHealth  -- Define a vida para o máximo
+end
+
+-- Verifica a cada redução de saúde e redefine
+humanoid.HealthChanged:Connect(function()
+    if humanoid.Health < humanoid.MaxHealth then
+        tornarImortal()
+    end
+end)
