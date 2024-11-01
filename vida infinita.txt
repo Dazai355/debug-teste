@@ -1,16 +1,46 @@
--- Função para manter a vida sempre no máximo
+-- Configuração inicial
 local player = game.Players.LocalPlayer
 local character = player.Character or player.CharacterAdded:Wait()
 local humanoid = character:WaitForChild("Humanoid")
 
--- Função para redefinir a vida quando ela diminui
+-- Variável para controlar o status da imortalidade
+local imortalidadeAtivada = false
+
+-- Função para manter a vida sempre no máximo, se ativada
 local function tornarImortal()
-    humanoid.Health = humanoid.MaxHealth  -- Define a vida para o máximo
+    if imortalidadeAtivada then
+        humanoid.Health = humanoid.MaxHealth  -- Define a vida para o máximo
+    end
 end
 
--- Verifica a cada redução de saúde e redefine
+-- Evento para redefinir a vida quando ela diminui
 humanoid.HealthChanged:Connect(function()
-    if humanoid.Health < humanoid.MaxHealth then
+    if humanoid.Health < humanoid.MaxHealth and imortalidadeAtivada then
         tornarImortal()
     end
 end)
+
+-- Criação da GUI
+local screenGui = Instance.new("ScreenGui")
+local botao = Instance.new("TextButton")
+
+screenGui.Parent = player:WaitForChild("PlayerGui")  -- Adiciona a GUI ao jogador
+
+-- Configurações do botão
+botao.Size = UDim2.new(0, 200, 0, 50)
+botao.Position = UDim2.new(0.5, -100, 0.1, 0)
+botao.Text = "Ativar Imortalidade"
+botao.Parent = screenGui
+
+-- Função para alternar a imortalidade
+local function alternarImortalidade()
+    imortalidadeAtivada = not imortalidadeAtivada
+    if imortalidadeAtivada then
+        botao.Text = "Desativar Imortalidade"
+    else
+        botao.Text = "Ativar Imortalidade"
+    end
+end
+
+-- Conecta a função de alternância ao botão
+botao.MouseButton1Click:Connect(alternarImortalidade)
