@@ -25,9 +25,31 @@ _G.Imune = false  -- Adiciona a variável para controle de imunidade
 local player = game.Players.LocalPlayer
 local humanoid = player.Character:WaitForChild("Humanoid")  -- Usa WaitForChild para garantir que o humanoid exista
 
+-- Adiciona cancelamento de hitbox para imunidade
+local hitboxDebounce = false  -- Previne múltiplas ativações simultâneas
+
+-- Evento HealthChanged atualizado (MANTENHA ESTA PARTE)
 humanoid.HealthChanged:Connect(function(health)
     if _G.Imune then
         humanoid.Health = humanoid.MaxHealth  -- Mantém a saúde no máximo
+        print("Imunidade ativada: saúde mantida no máximo")
+    end
+end)
+
+
+-- Código de cancelamento de hitbox (ADICIONE ESTA PARTE)
+local hitboxDebounce = false  -- Previne múltiplas ativações simultâneas
+
+humanoid.Touched:Connect(function(hit)
+    if _G.Imune and not hitboxDebounce then
+        hitboxDebounce = true
+        if hit:IsA("BasePart") and hit.CanCollide == false then  -- Verifica se é um hitbox
+            -- Cancela o efeito de dano, mantendo a saúde no máximo
+            humanoid.Health = humanoid.MaxHealth
+            print("Hitbox detectada e efeito cancelado")
+        end
+        wait(0.5)  -- Intervalo para evitar múltiplas ativações
+        hitboxDebounce = false
     end
 end)
 
@@ -164,19 +186,40 @@ KillGui.MouseButton1Up:Connect(function()
     _G.OpenAllChests = false
     _G.Delete = false
     _G.Imune = false  -- Adiciona a variável para controle de imunidade
-AutoChestsGui:Destroy()
-Part1:Destroy()
-Part2:Destroy()
-Part3:Destroy()
-Part4:Destroy()
-Part5:Destroy()
-Part6:Destroy()
-game.Players.LocalPlayer.Character.HumanoidRootPart:FindFirstChildOfClass("BodyVelocity"):Destroy()
-game.Players.LocalPlayer.Character.HumanoidRootPart:FindFirstChildOfClass("BodyGyro"):Destroy()
-wait(.1)
-game.Players.LocalPlayer.Character.HumanoidRootPart:FindFirstChildOfClass("BodyVelocity"):Destroy()
-game.Players.LocalPlayer.Character.HumanoidRootPart:FindFirstChildOfClass("BodyGyro"):Destroy()
+
+    AutoChestsGui:Destroy()
+    Part1:Destroy()
+    Part2:Destroy()
+    Part3:Destroy()
+    Part4:Destroy()
+    Part5:Destroy()
+    Part6:Destroy()
+
+    -- Verificações antes de destruir elementos
+    local bodyVelocity = game.Players.LocalPlayer.Character.HumanoidRootPart:FindFirstChildOfClass("BodyVelocity")
+    if bodyVelocity then
+        bodyVelocity:Destroy()
+    end
+
+    local bodyGyro = game.Players.LocalPlayer.Character.HumanoidRootPart:FindFirstChildOfClass("BodyGyro")
+    if bodyGyro then
+        bodyGyro:Destroy()
+    end
+
+    wait(0.1)
+
+    -- Verificações repetidas para garantir que tudo seja destruído
+    local bodyVelocity2 = game.Players.LocalPlayer.Character.HumanoidRootPart:FindFirstChildOfClass("BodyVelocity")
+    if bodyVelocity2 then
+        bodyVelocity2:Destroy()
+    end
+
+    local bodyGyro2 = game.Players.LocalPlayer.Character.HumanoidRootPart:FindFirstChildOfClass("BodyGyro")
+    if bodyGyro2 then
+        bodyGyro2:Destroy()
+    end
 end)
+
 
 Mini.Name = "Mini"
 Mini.Parent = Frame
@@ -285,7 +328,7 @@ TeleportToChestsSetting.Name = "TeleportToChestsSetting"
 TeleportToChestsSetting.Parent = TeleportToChests
 TeleportToChestsSetting.Size = UDim2.new(0, 25, 0, 25)
 TeleportToChestsSetting.Position = UDim2.new(0, 100, 0, 0)
-TeleportToChestsSetting.Text = "⚙️"
+TeleportToChestsSetting.Text = "⚙"
 TeleportToChestsSetting.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 TeleportToChestsSetting.BorderColor3 = Color3.fromRGB(255, 255, 255)
 TeleportToChestsSetting.BorderSizePixel = 2
@@ -384,7 +427,7 @@ AutoCollectSetting.Name = "AutoCollectSetting"
 AutoCollectSetting.Parent = AutoCollectChests
 AutoCollectSetting.Size = UDim2.new(0, 25, 0, 25)
 AutoCollectSetting.Position = UDim2.new(0, 100, 0, 0)
-AutoCollectSetting.Text = "⚙️"
+AutoCollectSetting.Text = "⚙"
 AutoCollectSetting.BackgroundColor3 = Color3.fromRGB(0, 0, 0)
 AutoCollectSetting.BorderColor3 = Color3.fromRGB(255, 255, 255)
 AutoCollectSetting.BorderSizePixel = 2
