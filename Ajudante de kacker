@@ -6,103 +6,74 @@ local screenGui = Instance.new("ScreenGui")
 screenGui.Name = "InfoGui"
 screenGui.Parent = playerGui
 
+-- Criar labels para exibir informações
 local itemLabel = Instance.new("TextLabel")
-itemLabel.Size = UDim2.new(0, 300, 0, 50)
+itemLabel.Size = UDim2.new(0, 400, 0, 50)
 itemLabel.Position = UDim2.new(0, 10, 0, 10)
 itemLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
 itemLabel.TextColor3 = Color3.new(1, 1, 1)
 itemLabel.TextScaled = true
 itemLabel.Parent = screenGui
 
+local positionLabel = Instance.new("TextLabel")
+positionLabel.Size = UDim2.new(0, 400, 0, 50)
+positionLabel.Position = UDim2.new(0, 10, 0, 70)
+positionLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+positionLabel.TextColor3 = Color3.new(1, 1, 1)
+positionLabel.TextScaled = true
+positionLabel.Parent = screenGui
+
 local npcLabel = Instance.new("TextLabel")
-npcLabel.Size = UDim2.new(0, 300, 0, 200)
-npcLabel.Position = UDim2.new(0, 10, 0, 70)
+npcLabel.Size = UDim2.new(0, 400, 0, 150)
+npcLabel.Position = UDim2.new(0, 10, 0, 130)
 npcLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
 npcLabel.TextColor3 = Color3.new(1, 1, 1)
 npcLabel.TextScaled = true
 npcLabel.TextYAlignment = Enum.TextYAlignment.Top
 npcLabel.Parent = screenGui
 
-local buttonLabel = Instance.new("TextLabel")
-buttonLabel.Size = UDim2.new(0, 300, 0, 200)
-buttonLabel.Position = UDim2.new(0, 10, 0, 280)
-buttonLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
-buttonLabel.TextColor3 = Color3.new(1, 1, 1)
-buttonLabel.TextScaled = true
-buttonLabel.TextYAlignment = Enum.TextYAlignment.Top
-buttonLabel.Parent = screenGui
-
-local workspaceLabel = Instance.new("TextLabel")
-workspaceLabel.Size = UDim2.new(0, 300, 0, 400)
-workspaceLabel.Position = UDim2.new(0, 320, 0, 10)
-workspaceLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
-workspaceLabel.TextColor3 = Color3.new(1, 1, 1)
-workspaceLabel.TextScaled = true
-workspaceLabel.TextYAlignment = Enum.TextYAlignment.Top
-workspaceLabel.TextXAlignment = Enum.TextXAlignment.Left
-workspaceLabel.Parent = screenGui
-
--- Mostrar o valor do item que o jogador está segurando
-local backpack = player:FindFirstChild("Backpack")
-local heldItem = player.Character and player.Character:FindFirstChildOfClass("Tool")
-
-if heldItem then
-    local value = heldItem:FindFirstChild("Value") -- Supondo que o item tenha um atributo chamado "Value"
-    if value then
-        itemLabel.Text = "O valor do item que você está segurando é: " .. value.Value
-    else
-        itemLabel.Text = "Este item não tem um valor associado."
-    end
-else
-    itemLabel.Text = "Você não está segurando nenhum item."
-end
-
--- Mostrar as coordenadas dos NPCs
-local npcText = "Coordenadas dos NPCs:\n"
-local npcs = game.Workspace:FindFirstChild("NPCs") -- Supondo que os NPCs estejam em um modelo chamado "NPCs"
-
-if npcs then
-    for _, npc in pairs(npcs:GetChildren()) do
-        if npc:IsA("Model") and npc:FindFirstChild("HumanoidRootPart") then
-            local position = npc.HumanoidRootPart.Position
-            npcText = npcText .. "NPC " .. npc.Name .. ": (" .. position.X .. ", " .. position.Y .. ", " .. position.Z .. ")\n"
-        end
-    end
-else
-    npcText = npcText .. "Nenhum NPC encontrado."
-end
-npcLabel.Text = npcText
-
--- Mostrar o valor dos botões no jogo
-local buttonText = "Valores dos botões:\n"
-local buttons = game.Workspace:FindFirstChild("Buttons") -- Supondo que os botões estejam em um modelo chamado "Buttons"
-
-if buttons then
-    for _, button in pairs(buttons:GetChildren()) do
-        if button:IsA("Part") and button:FindFirstChild("Value") then
-            local buttonValue = button.Value.Value
-            buttonText = buttonText .. "Botão " .. button.Name .. ": " .. buttonValue .. "\n"
+-- Função para atualizar as informações
+local function atualizarInformacoes()
+    -- Atualizar valor do item que o jogador está segurando
+    local heldItem = player.Character and player.Character:FindFirstChildOfClass("Tool")
+    if heldItem then
+        local value = heldItem:FindFirstChild("Value") -- Supondo que o item tenha um atributo chamado "Value"
+        if value then
+            itemLabel.Text = "Item segurado: " .. heldItem.Name .. " | Valor: " .. value.Value
         else
-            buttonText = buttonText .. "Botão " .. button.Name .. " não tem um valor associado.\n"
+            itemLabel.Text = "Item segurado: " .. heldItem.Name .. " | Sem valor associado"
         end
+    else
+        itemLabel.Text = "Você não está segurando nenhum item."
     end
-else
-    buttonText = buttonText .. "Nenhum botão encontrado."
-end
-buttonLabel.Text = buttonText
 
--- Mostrar todos os objetos no Workspace
-local function listarObjetosNoWorkspace(obj, nivel)
-    nivel = nivel or 0
-    local espaco = string.rep(" ", nivel * 2)
-    local texto = espaco .. "- " .. obj.Name .. "\n"
-    if obj:IsA("Model") or obj:IsA("Folder") then
-        for _, filho in pairs(obj:GetChildren()) do
-            texto = texto .. listarObjetosNoWorkspace(filho, nivel + 1)
+    -- Atualizar as coordenadas do jogador
+    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
+        local position = player.Character.HumanoidRootPart.Position
+        positionLabel.Text = "Suas coordenadas: (" .. math.floor(position.X) .. ", " .. math.floor(position.Y) .. ", " .. math.floor(position.Z) .. ")"
+    else
+        positionLabel.Text = "Coordenadas não disponíveis."
+    end
+
+    -- Atualizar coordenadas dos NPCs
+    local npcText = "Coordenadas dos NPCs:\n"
+    local npcs = game.Workspace:FindFirstChild("NPCs") -- Supondo que os NPCs estejam em um modelo chamado "NPCs"
+
+    if npcs then
+        for _, npc in pairs(npcs:GetChildren()) do
+            if npc:IsA("Model") and npc:FindFirstChild("HumanoidRootPart") then
+                local npcPosition = npc.HumanoidRootPart.Position
+                npcText = npcText .. npc.Name .. ": (" .. math.floor(npcPosition.X) .. ", " .. math.floor(npcPosition.Y) .. ", " .. math.floor(npcPosition.Z) .. ")\n"
+            end
         end
+    else
+        npcText = npcText .. "Nenhum NPC encontrado."
     end
-    return texto
+    npcLabel.Text = npcText
 end
 
-local workspaceText = "Estrutura do Workspace:\n" .. listarObjetosNoWorkspace(game.Workspace)
-workspaceLabel.Text = workspaceText
+-- Atualizar as informações a cada segundo
+while true do
+    atualizarInformacoes()
+    wait(1) -- Atualiza a cada 1 segundo
+end
