@@ -1,36 +1,35 @@
--- Criar a GUI para exibir os objetos do Workspace
+-- Criar a GUI para exibir a lista de objetos filtrados
 local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "WorkspaceViewer"
+screenGui.Name = "FilteredWorkspaceList"
 screenGui.Parent = playerGui
 
-local workspaceLabel = Instance.new("TextLabel")
-workspaceLabel.Size = UDim2.new(0, 600, 0, 400)
-workspaceLabel.Position = UDim2.new(0, 10, 0, 10)
-workspaceLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
-workspaceLabel.TextColor3 = Color3.new(1, 1, 1)
-workspaceLabel.TextScaled = true
-workspaceLabel.TextYAlignment = Enum.TextYAlignment.Top
-workspaceLabel.TextXAlignment = Enum.TextXAlignment.Left
-workspaceLabel.Parent = screenGui
+local filteredListLabel = Instance.new("TextLabel")
+filteredListLabel.Size = UDim2.new(0, 600, 0, 400)
+filteredListLabel.Position = UDim2.new(0, 10, 0, 10)
+filteredListLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+filteredListLabel.TextColor3 = Color3.new(1, 1, 1)
+filteredListLabel.TextScaled = true
+filteredListLabel.TextYAlignment = Enum.TextYAlignment.Top
+filteredListLabel.TextXAlignment = Enum.TextXAlignment.Left
+filteredListLabel.TextWrapped = true
+filteredListLabel.Parent = screenGui
 
--- Função para listar os objetos no Workspace
-local function listarObjetosNoWorkspace(obj, nivel)
-    nivel = nivel or 0
-    local espaco = string.rep(" ", nivel * 2)
-    local texto = espaco .. "- " .. obj.Name .. "\n"
-    
-    -- Se o objeto for um container (Model, Folder, etc.), listar seus filhos
-    if #obj:GetChildren() > 0 then
-        for _, filho in pairs(obj:GetChildren()) do
-            texto = texto .. listarObjetosNoWorkspace(filho, nivel + 1)
+-- Função para filtrar objetos específicos no Workspace (exemplo: apenas Partes)
+local function listarObjetosFiltradosNoWorkspace(filtro)
+    local texto = "Lista de Objetos Filtrados:\n"
+    for _, obj in pairs(game.Workspace:GetDescendants()) do
+        if obj:IsA(filtro) then
+            texto = texto .. obj:GetFullName() .. "\n"
         end
     end
-    
     return texto
 end
 
--- Atualizar a GUI com a lista de objetos do Workspace
-workspaceLabel.Text = "Conteúdo do Workspace:\n" .. listarObjetosNoWorkspace(game.Workspace)
+-- Gera a lista de objetos do tipo especificado (exemplo: "Part" para todas as partes)
+local filtro = "Part"  -- Troque "Part" pelo tipo de objeto que deseja filtrar (ex: "Model", "Folder")
+filteredListLabel.Text = listarObjetosFiltradosNoWorkspace(filtro)
+
+-- Dica: Para copiar a lista manualmente, selecione o texto exibido na GUI e copie.
