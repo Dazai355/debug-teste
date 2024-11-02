@@ -1,0 +1,82 @@
+-- Criar a GUI para exibir as informações
+local player = game.Players.LocalPlayer
+local playerGui = player:WaitForChild("PlayerGui")
+
+local screenGui = Instance.new("ScreenGui")
+screenGui.Name = "InfoGui"
+screenGui.Parent = playerGui
+
+local itemLabel = Instance.new("TextLabel")
+itemLabel.Size = UDim2.new(0, 300, 0, 50)
+itemLabel.Position = UDim2.new(0, 10, 0, 10)
+itemLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+itemLabel.TextColor3 = Color3.new(1, 1, 1)
+itemLabel.TextScaled = true
+itemLabel.Parent = screenGui
+
+local npcLabel = Instance.new("TextLabel")
+npcLabel.Size = UDim2.new(0, 300, 0, 200)
+npcLabel.Position = UDim2.new(0, 10, 0, 70)
+npcLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+npcLabel.TextColor3 = Color3.new(1, 1, 1)
+npcLabel.TextScaled = true
+npcLabel.TextYAlignment = Enum.TextYAlignment.Top
+npcLabel.Parent = screenGui
+
+local buttonLabel = Instance.new("TextLabel")
+buttonLabel.Size = UDim2.new(0, 300, 0, 200)
+buttonLabel.Position = UDim2.new(0, 10, 0, 280)
+buttonLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+buttonLabel.TextColor3 = Color3.new(1, 1, 1)
+buttonLabel.TextScaled = true
+buttonLabel.TextYAlignment = Enum.TextYAlignment.Top
+buttonLabel.Parent = screenGui
+
+-- Mostrar o valor do item que o jogador está segurando
+local backpack = player:FindFirstChild("Backpack")
+local heldItem = player.Character and player.Character:FindFirstChildOfClass("Tool")
+
+if heldItem then
+    local value = heldItem:FindFirstChild("Value") -- Supondo que o item tenha um atributo chamado "Value"
+    if value then
+        itemLabel.Text = "O valor do item que você está segurando é: " .. value.Value
+    else
+        itemLabel.Text = "Este item não tem um valor associado."
+    end
+else
+    itemLabel.Text = "Você não está segurando nenhum item."
+end
+
+-- Mostrar as coordenadas dos NPCs
+local npcText = "Coordenadas dos NPCs:\n"
+local npcs = game.Workspace:FindFirstChild("NPCs") -- Supondo que os NPCs estejam em um modelo chamado "NPCs"
+
+if npcs then
+    for _, npc in pairs(npcs:GetChildren()) do
+        if npc:IsA("Model") and npc:FindFirstChild("HumanoidRootPart") then
+            local position = npc.HumanoidRootPart.Position
+            npcText = npcText .. "NPC " .. npc.Name .. ": (" .. position.X .. ", " .. position.Y .. ", " .. position.Z .. ")\n"
+        end
+    end
+else
+    npcText = npcText .. "Nenhum NPC encontrado."
+end
+npcLabel.Text = npcText
+
+-- Mostrar o valor dos botões no jogo
+local buttonText = "Valores dos botões:\n"
+local buttons = game.Workspace:FindFirstChild("Buttons") -- Supondo que os botões estejam em um modelo chamado "Buttons"
+
+if buttons then
+    for _, button in pairs(buttons:GetChildren()) do
+        if button:IsA("Part") and button:FindFirstChild("Value") then
+            local buttonValue = button.Value.Value
+            buttonText = buttonText .. "Botão " .. button.Name .. ": " .. buttonValue .. "\n"
+        else
+            buttonText = buttonText .. "Botão " .. button.Name .. " não tem um valor associado.\n"
+        end
+    end
+else
+    buttonText = buttonText .. "Nenhum botão encontrado."
+end
+buttonLabel.Text = buttonText
