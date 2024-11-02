@@ -32,6 +32,16 @@ buttonLabel.TextScaled = true
 buttonLabel.TextYAlignment = Enum.TextYAlignment.Top
 buttonLabel.Parent = screenGui
 
+local workspaceLabel = Instance.new("TextLabel")
+workspaceLabel.Size = UDim2.new(0, 300, 0, 400)
+workspaceLabel.Position = UDim2.new(0, 320, 0, 10)
+workspaceLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+workspaceLabel.TextColor3 = Color3.new(1, 1, 1)
+workspaceLabel.TextScaled = true
+workspaceLabel.TextYAlignment = Enum.TextYAlignment.Top
+workspaceLabel.TextXAlignment = Enum.TextXAlignment.Left
+workspaceLabel.Parent = screenGui
+
 -- Mostrar o valor do item que o jogador está segurando
 local backpack = player:FindFirstChild("Backpack")
 local heldItem = player.Character and player.Character:FindFirstChildOfClass("Tool")
@@ -80,3 +90,19 @@ else
     buttonText = buttonText .. "Nenhum botão encontrado."
 end
 buttonLabel.Text = buttonText
+
+-- Mostrar todos os objetos no Workspace
+local function listarObjetosNoWorkspace(obj, nivel)
+    nivel = nivel or 0
+    local espaco = string.rep(" ", nivel * 2)
+    local texto = espaco .. "- " .. obj.Name .. "\n"
+    if obj:IsA("Model") or obj:IsA("Folder") then
+        for _, filho in pairs(obj:GetChildren()) do
+            texto = texto .. listarObjetosNoWorkspace(filho, nivel + 1)
+        end
+    end
+    return texto
+end
+
+local workspaceText = "Estrutura do Workspace:\n" .. listarObjetosNoWorkspace(game.Workspace)
+workspaceLabel.Text = workspaceText
