@@ -11,25 +11,34 @@ filteredListLabel.Size = UDim2.new(0, 600, 0, 400)
 filteredListLabel.Position = UDim2.new(0, 10, 0, 10)
 filteredListLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
 filteredListLabel.TextColor3 = Color3.new(1, 1, 1)
-filteredListLabel.TextScaled = true
-filteredListLabel.TextYAlignment = Enum.TextYAlignment.Top
-filteredListLabel.TextXAlignment = Enum.TextXAlignment.Left
+filteredListLabel.TextScaled = false
+filteredListLabel.TextSize = 14
 filteredListLabel.TextWrapped = true
+filteredListLabel.Text = "Carregando lista de objetos..."
 filteredListLabel.Parent = screenGui
 
--- Função para filtrar objetos específicos no Workspace (exemplo: apenas Partes)
+-- Função para listar objetos filtrados no Workspace
 local function listarObjetosFiltradosNoWorkspace(filtro)
     local texto = "Lista de Objetos Filtrados:\n"
+    local encontrouAlgo = false
+    
     for _, obj in pairs(game.Workspace:GetDescendants()) do
         if obj:IsA(filtro) then
             texto = texto .. obj:GetFullName() .. "\n"
+            encontrouAlgo = true
         end
     end
+    
+    if not encontrouAlgo then
+        texto = "Nenhum objeto do tipo " .. filtro .. " encontrado no Workspace."
+    end
+
+    print(texto) -- Adiciona um print para verificar se a função está gerando a lista corretamente
     return texto
 end
 
--- Gera a lista de objetos do tipo especificado (exemplo: "Part" para todas as partes)
-local filtro = "Part"  -- Troque "Part" pelo tipo de objeto que deseja filtrar (ex: "Model", "Folder")
-filteredListLabel.Text = listarObjetosFiltradosNoWorkspace(filtro)
+-- Tipo de filtro que deseja aplicar (exemplo: "Part" para partes, "Model" para modelos)
+local filtro = "Part"  -- Altere para o tipo de objeto que deseja listar
 
--- Dica: Para copiar a lista manualmente, selecione o texto exibido na GUI e copie.
+-- Atualizar a GUI com a lista de objetos filtrados
+filteredListLabel.Text = listarObjetosFiltradosNoWorkspace(filtro)
