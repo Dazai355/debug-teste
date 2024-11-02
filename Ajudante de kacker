@@ -1,79 +1,36 @@
--- Criar a GUI para exibir as informações
+-- Criar a GUI para exibir os objetos do Workspace
 local player = game.Players.LocalPlayer
 local playerGui = player:WaitForChild("PlayerGui")
 
 local screenGui = Instance.new("ScreenGui")
-screenGui.Name = "InfoGui"
+screenGui.Name = "WorkspaceViewer"
 screenGui.Parent = playerGui
 
--- Criar labels para exibir informações
-local itemLabel = Instance.new("TextLabel")
-itemLabel.Size = UDim2.new(0, 400, 0, 50)
-itemLabel.Position = UDim2.new(0, 10, 0, 10)
-itemLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
-itemLabel.TextColor3 = Color3.new(1, 1, 1)
-itemLabel.TextScaled = true
-itemLabel.Parent = screenGui
+local workspaceLabel = Instance.new("TextLabel")
+workspaceLabel.Size = UDim2.new(0, 600, 0, 400)
+workspaceLabel.Position = UDim2.new(0, 10, 0, 10)
+workspaceLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
+workspaceLabel.TextColor3 = Color3.new(1, 1, 1)
+workspaceLabel.TextScaled = true
+workspaceLabel.TextYAlignment = Enum.TextYAlignment.Top
+workspaceLabel.TextXAlignment = Enum.TextXAlignment.Left
+workspaceLabel.Parent = screenGui
 
-local positionLabel = Instance.new("TextLabel")
-positionLabel.Size = UDim2.new(0, 400, 0, 50)
-positionLabel.Position = UDim2.new(0, 10, 0, 70)
-positionLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
-positionLabel.TextColor3 = Color3.new(1, 1, 1)
-positionLabel.TextScaled = true
-positionLabel.Parent = screenGui
-
-local npcLabel = Instance.new("TextLabel")
-npcLabel.Size = UDim2.new(0, 400, 0, 150)
-npcLabel.Position = UDim2.new(0, 10, 0, 130)
-npcLabel.BackgroundColor3 = Color3.new(0.2, 0.2, 0.2)
-npcLabel.TextColor3 = Color3.new(1, 1, 1)
-npcLabel.TextScaled = true
-npcLabel.TextYAlignment = Enum.TextYAlignment.Top
-npcLabel.Parent = screenGui
-
--- Função para atualizar as informações
-local function atualizarInformacoes()
-    -- Atualizar valor do item que o jogador está segurando
-    local heldItem = player.Character and player.Character:FindFirstChildOfClass("Tool")
-    if heldItem then
-        local value = heldItem:FindFirstChild("Value") -- Supondo que o item tenha um atributo chamado "Value"
-        if value then
-            itemLabel.Text = "Item segurado: " .. heldItem.Name .. " | Valor: " .. value.Value
-        else
-            itemLabel.Text = "Item segurado: " .. heldItem.Name .. " | Sem valor associado"
+-- Função para listar os objetos no Workspace
+local function listarObjetosNoWorkspace(obj, nivel)
+    nivel = nivel or 0
+    local espaco = string.rep(" ", nivel * 2)
+    local texto = espaco .. "- " .. obj.Name .. "\n"
+    
+    -- Se o objeto for um container (Model, Folder, etc.), listar seus filhos
+    if #obj:GetChildren() > 0 then
+        for _, filho in pairs(obj:GetChildren()) do
+            texto = texto .. listarObjetosNoWorkspace(filho, nivel + 1)
         end
-    else
-        itemLabel.Text = "Você não está segurando nenhum item."
     end
-
-    -- Atualizar as coordenadas do jogador
-    if player.Character and player.Character:FindFirstChild("HumanoidRootPart") then
-        local position = player.Character.HumanoidRootPart.Position
-        positionLabel.Text = "Suas coordenadas: (" .. math.floor(position.X) .. ", " .. math.floor(position.Y) .. ", " .. math.floor(position.Z) .. ")"
-    else
-        positionLabel.Text = "Coordenadas não disponíveis."
-    end
-
-    -- Atualizar coordenadas dos NPCs
-    local npcText = "Coordenadas dos NPCs:\n"
-    local npcs = game.Workspace:FindFirstChild("NPCs") -- Supondo que os NPCs estejam em um modelo chamado "NPCs"
-
-    if npcs then
-        for _, npc in pairs(npcs:GetChildren()) do
-            if npc:IsA("Model") and npc:FindFirstChild("HumanoidRootPart") then
-                local npcPosition = npc.HumanoidRootPart.Position
-                npcText = npcText .. npc.Name .. ": (" .. math.floor(npcPosition.X) .. ", " .. math.floor(npcPosition.Y) .. ", " .. math.floor(npcPosition.Z) .. ")\n"
-            end
-        end
-    else
-        npcText = npcText .. "Nenhum NPC encontrado."
-    end
-    npcLabel.Text = npcText
+    
+    return texto
 end
 
--- Atualizar as informações a cada segundo
-while true do
-    atualizarInformacoes()
-    wait(1) -- Atualiza a cada 1 segundo
-end
+-- Atualizar a GUI com a lista de objetos do Workspace
+workspaceLabel.Text = "Conteúdo do Workspace:\n" .. listarObjetosNoWorkspace(game.Workspace)
