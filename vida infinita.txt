@@ -82,7 +82,7 @@ end)
 while true do
     if killauraEnabled then
         for _, npc in pairs(game.Workspace:GetChildren()) do
-            if npc:IsA("Model") and npc:FindFirstChild("Humanoid") and npc.Name == "NomeDoBoss" then
+            if npc:IsA("Model") and npc:FindFirstChild("Humanoid") and npc.Name == "dummy" then
                 local character = game.Players.LocalPlayer.Character
                 local distance = (character.HumanoidRootPart.Position - npc.HumanoidRootPart.Position).magnitude
                 if distance <= maxDistance then
