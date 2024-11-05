@@ -1,5 +1,20 @@
 game.Workspace.FallenPartsDestroyHeight = -50000
+local function log(message)
+    print(os.date("%Y-%m-%d %H:%M:%S") .. ": " .. message)
+end
 
+local function restartScript()
+    log("Reiniciando o script devido a um erro.")
+    -- Coloque aqui a lógica para reiniciar o script
+    loadstring(game:HttpGet("URL_DO_SEU_SCRIPT"))() -- Substitua "URL_DO_SEU_SCRIPT" pela URL do seu script.
+end
+
+local function safeDestroy(instance)
+    if instance then
+        instance:Destroy()
+        log("Destruiu a instância: " .. instance.Name)
+    end
+end
 -- Função para verificar se a posição é proibida
 function isCoordenadaProibida(posicao)
     -- Defina as coordenadas exatas do baú proibido
@@ -12,6 +27,84 @@ function isCoordenadaProibida(posicao)
     return (math.abs(posicao.X - coordenadaX) <= margemTolerancia) and
            (math.abs(posicao.Y - coordenadaY) <= margemTolerancia) and
            (math.abs(posicao.Z - coordenadaZ) <= margemTolerancia)
+end
+
+local function waitForChestSpawn()
+    log("Esperando pelo spawn de baús...")
+    while #game:GetService("Workspace").chests:GetChildren() == 0 do
+        wait(1) -- Espera 1 segundo antes de checar novamente
+    end
+    log("Baú encontrado.")
+end
+
+local function teleportToChests()
+    log("Iniciando teleporte para baús.")
+    while _G.Teleport do
+        wait(tonumber(TeleportToChestsDelay.Text) or 0.2)
+        
+        waitForChestSpawn() -- Aguarda pelo spawn de baús antes de continuar
+        
+        for _, chest in pairs(game:GetService("Workspace").chests:GetChildren()) do
+            if chest:IsA("BasePart") and not isCoordenadaProibida(chest.Position) then
+                local success, err = pcall(function()
+                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = chest.CFrame
+                end)
+
+                if success then
+                    log("Teleportado para o baú: " .. chest.Name)
+                    wait(tonumber(TeleportToChestsDelay.Text) or 0.2)
+                else
+                    log("Erro ao teletransportar para o baú " .. chest.Name .. ": " .. err)
+                    restartScript() -- Chama a função para reiniciar o script em caso de erro
+                end
+            else
+                log("Ignorando baú nas coordenadas proibidas: " .. (chest.Name or "Desconhecido"))
+            end
+        end
+    end
+    log("Teleporte para baús finalizado.")
+end
+
+local function autoCollectChests()
+    log("Iniciando coleta automática de baús.")
+    while _G.Collect do
+        wait(tonumber(AutoCollectDelay.Text) or 0.1)
+        
+        waitForChestSpawn() -- Aguarda pelo spawn de baús antes de continuar
+
+        for _, chest in pairs(game:GetService("Workspace").chests:GetChildren()) do
+            if chest:IsA("BasePart") then
+                local success, err = pcall(function()
+                    fireproximityprompt(chest.ProximityPrompt)
+                end)
+
+                if success then
+                    log("Coletou o baú: " .. chest.Name)
+                else
+                    log("Erro ao coletar o baú " .. chest.Name .. ": " .. err)
+                    restartScript() -- Chama a função para reiniciar o script em caso de erro
+                end
+            else
+                log("Tentativa de coleta em um objeto que não é um baú: " .. (chest.Name or "Desconhecido"))
+            end
+        end
+    end
+    log("Coleta automática de baús finalizada.")
+end
+
+_G.Teleport = false
+_G.Collect = false
+_G.OpenAllChests = false
+_G.Delete = false
+
+if game:GetService("CoreGui"):FindFirstChild("AutoChestsGui") then
+    game:GetService("CoreGui"):FindFirstChild("AutoChestsGui"):Destroy()
+end
+
+for i,v in pairs(game:GetService("Workspace"):GetDescendants()) do
+if v.Name == "FloatPath" then
+v:Destroy()
+end
 end
 
 local AutoChestsGui = Instance.new("ScreenGui")
@@ -195,7 +288,7 @@ TeleportToChests.MouseButton1Up:Connect(function()
 if TeleportToChests.Text == "Teleport To Chests (Off)" then
 TeleportToChests.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
 TeleportToChests.Text = "Teleport To Chests (On)"
-
+log("Teleporte para baús ativado.")
 local BV = Instance.new("BodyVelocity",game.Players.LocalPlayer.Character.HumanoidRootPart)
 		local BG = Instance.new("BodyGyro",game.Players.LocalPlayer.Character.HumanoidRootPart)
 		BG.MaxTorque = Vector3.new(math.huge,math.huge,math.huge)
@@ -243,6 +336,7 @@ TeleportToChests.Text = "Teleport To Chests (Off)"
 wait(.1)
 _G.Teleport = false
 wait(.1)
+log("Teleporte para baús desativado.")
 game.Players.LocalPlayer.Character.HumanoidRootPart:FindFirstChildOfClass("BodyVelocity"):Destroy()
 		game.Players.LocalPlayer.Character.HumanoidRootPart:FindFirstChildOfClass("BodyGyro"):Destroy()
 wait(.1)
@@ -281,7 +375,7 @@ TeleportToChestsDelay.Name = "TeleportToChestsDelay"
 TeleportToChestsDelay.Parent = TeleportToChests
 TeleportToChestsDelay.Size = UDim2.new(0, 50, 0, 25)
 TeleportToChestsDelay.Position = UDim2.new(0, 140.5, 0, 0)
-TeleportToChestsDelay.Text = "1"
+TeleportToChestsDelay.Text = "0.2"
 TeleportToChestsDelay.ClearTextOnFocus = true
 TeleportToChestsDelay.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 TeleportToChestsDelay.BorderColor3 = Color3.fromRGB(0, 0, 0)
@@ -312,6 +406,7 @@ if AutoCollectChests.Text == "Auto Collect Chests (Off)" then
 AutoCollectChests.Text = "Auto Collect Chests (On)"
 AutoCollectChests.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
 _G.Collect = true
+        log("Coleta automática de baús ativada.")
 while _G.Collect == true do wait(AutoCollectDelay.Text)
 for i,v in pairs(game:GetService("Workspace").chests:GetChildren()) do
 if v:IsA("BasePart") then
@@ -339,6 +434,7 @@ if AutoCollectChests.Text == "Auto Collect Chests (On)" then
 AutoCollectChests.Text = "Auto Collect Chests (Off)"
 AutoCollectChests.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
 _G.Collect = false
+log("Coleta automática de baús desativada.")
 end
 end
 end)
@@ -372,7 +468,7 @@ AutoCollectDelay.Name = "AutoCollectDelay"
 AutoCollectDelay.Parent = AutoCollectChests
 AutoCollectDelay.Size = UDim2.new(0, 50, 0, 25)
 AutoCollectDelay.Position = UDim2.new(0, 140.5, 0, 0)
-AutoCollectDelay.Text = "0.4"
+AutoCollectDelay.Text = "0.1"
 AutoCollectDelay.ClearTextOnFocus = true
 AutoCollectDelay.BackgroundColor3 = Color3.fromRGB(255, 255, 255)
 AutoCollectDelay.BorderColor3 = Color3.fromRGB(0, 0, 0)
@@ -558,7 +654,6 @@ AutoOpenAllChests.Text = "Auto Open Chests (On)"
 AutoOpenAllChests.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
 _G.OpenAllChests = true
 while _G.OpenAllChests == true do wait(1)
-    delayAction(1)
 -- Código para coleta automática, ignorando baús proibidos
 for i, v in pairs(game:GetService("Workspace").chests:GetChildren()) do
     if v:IsA("BasePart") and not isCoordenadaProibida(v.Position) then
@@ -606,7 +701,6 @@ DeleteUselessItems.Text = "Auto Delete Useless Items (On)"
 DeleteUselessItems.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
 _G.Delete = true
 while _G.Delete == true do wait(1)
-    delayAction(1)
 for i,v in pairs(game.Players.LocalPlayer:FindFirstChildOfClass("Backpack"):GetChildren()) do
 		if v.Name == "Oil Cup" or v.Name == "Blood Cup" or v.Name == "Fish" then
 			v:Destroy()
