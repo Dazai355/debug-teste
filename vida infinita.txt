@@ -1,20 +1,5 @@
 game.Workspace.FallenPartsDestroyHeight = -50000
-local function log(message)
-    print(os.date("%Y-%m-%d %H:%M:%S") .. ": " .. message)
-end
 
-local function restartScript()
-    log("Reiniciando o script devido a um erro.")
-    -- Coloque aqui a lógica para reiniciar o script
-    loadstring(game:HttpGet("URL_DO_SEU_SCRIPT"))() -- Substitua "URL_DO_SEU_SCRIPT" pela URL do seu script.
-end
-
-local function safeDestroy(instance)
-    if instance then
-        instance:Destroy()
-        log("Destruiu a instância: " .. instance.Name)
-    end
-end
 -- Função para verificar se a posição é proibida
 function isCoordenadaProibida(posicao)
     -- Defina as coordenadas exatas do baú proibido
@@ -29,68 +14,6 @@ function isCoordenadaProibida(posicao)
            (math.abs(posicao.Z - coordenadaZ) <= margemTolerancia)
 end
 
-local function waitForChestSpawn()
-    log("Esperando pelo spawn de baús...")
-    while #game:GetService("Workspace").chests:GetChildren() == 0 do
-        wait(1) -- Espera 1 segundo antes de checar novamente
-    end
-    log("Baú encontrado.")
-end
-
-local function teleportToChests()
-    log("Iniciando teleporte para baús.")
-    while _G.Teleport do
-        wait(tonumber(TeleportToChestsDelay.Text) or 0.2)
-        
-        waitForChestSpawn() -- Aguarda pelo spawn de baús antes de continuar
-        
-        for _, chest in pairs(game:GetService("Workspace").chests:GetChildren()) do
-            if chest:IsA("BasePart") and not isCoordenadaProibida(chest.Position) then
-                local success, err = pcall(function()
-                    game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = chest.CFrame
-                end)
-
-                if success then
-                    log("Teleportado para o baú: " .. chest.Name)
-                    wait(tonumber(TeleportToChestsDelay.Text) or 0.2)
-                else
-                    log("Erro ao teletransportar para o baú " .. chest.Name .. ": " .. err)
-                    restartScript() -- Chama a função para reiniciar o script em caso de erro
-                end
-            else
-                log("Ignorando baú nas coordenadas proibidas: " .. (chest.Name or "Desconhecido"))
-            end
-        end
-    end
-    log("Teleporte para baús finalizado.")
-end
-
-local function autoCollectChests()
-    log("Iniciando coleta automática de baús.")
-    while _G.Collect do
-        wait(tonumber(AutoCollectDelay.Text) or 0.1)
-        
-        waitForChestSpawn() -- Aguarda pelo spawn de baús antes de continuar
-
-        for _, chest in pairs(game:GetService("Workspace").chests:GetChildren()) do
-            if chest:IsA("BasePart") then
-                local success, err = pcall(function()
-                    fireproximityprompt(chest.ProximityPrompt)
-                end)
-
-                if success then
-                    log("Coletou o baú: " .. chest.Name)
-                else
-                    log("Erro ao coletar o baú " .. chest.Name .. ": " .. err)
-                    restartScript() -- Chama a função para reiniciar o script em caso de erro
-                end
-            else
-                log("Tentativa de coleta em um objeto que não é um baú: " .. (chest.Name or "Desconhecido"))
-            end
-        end
-    end
-    log("Coleta automática de baús finalizada.")
-end
 
 _G.Teleport = false
 _G.Collect = false
@@ -288,7 +211,7 @@ TeleportToChests.MouseButton1Up:Connect(function()
 if TeleportToChests.Text == "Teleport To Chests (Off)" then
 TeleportToChests.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
 TeleportToChests.Text = "Teleport To Chests (On)"
-log("Teleporte para baús ativado.")
+
 local BV = Instance.new("BodyVelocity",game.Players.LocalPlayer.Character.HumanoidRootPart)
 		local BG = Instance.new("BodyGyro",game.Players.LocalPlayer.Character.HumanoidRootPart)
 		BG.MaxTorque = Vector3.new(math.huge,math.huge,math.huge)
@@ -336,7 +259,6 @@ TeleportToChests.Text = "Teleport To Chests (Off)"
 wait(.1)
 _G.Teleport = false
 wait(.1)
-log("Teleporte para baús desativado.")
 game.Players.LocalPlayer.Character.HumanoidRootPart:FindFirstChildOfClass("BodyVelocity"):Destroy()
 		game.Players.LocalPlayer.Character.HumanoidRootPart:FindFirstChildOfClass("BodyGyro"):Destroy()
 wait(.1)
@@ -406,13 +328,21 @@ if AutoCollectChests.Text == "Auto Collect Chests (Off)" then
 AutoCollectChests.Text = "Auto Collect Chests (On)"
 AutoCollectChests.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
 _G.Collect = true
-        log("Coleta automática de baús ativada.")
 while _G.Collect == true do wait(AutoCollectDelay.Text)
-for i,v in pairs(game:GetService("Workspace").chests:GetChildren()) do
-if v:IsA("BasePart") then
-fireproximityprompt(v.ProximityPrompt)
-end
-end
+    for i, v in pairs(game:GetService("Workspace").chests:GetChildren()) do
+        -- Verifica se o item é um baú ou a "Candy"
+        if v:IsA("BasePart") and (v.Name == "Chest" or v.Name == "DarkChest_p" or v.Name == "Weeping Chest-p" or v.Name == "Candy") then
+            if v:FindFirstChild("ProximityPrompt") then  -- Verifica se o ProximityPrompt está presente
+                fireproximityprompt(v.ProximityPrompt)  -- Aciona o ProximityPrompt
+                print("Item coletado: " .. v.Name)  -- Imprime o nome do item coletado
+            else
+                print("ProximityPrompt não encontrado em " .. v.Name)  -- Imprime se o ProximityPrompt não foi encontrado
+            end
+        else
+            print("Item ignorado: " .. v.Name)  -- Imprime caso o item não seja coletável
+        end
+    end
+
 -- Código para teleporte, ignorando baús proibidos
 for i, v in pairs(game:GetService("Workspace").chests:GetChildren()) do
     if v:IsA("BasePart") and not isCoordenadaProibida(v.Position) then
@@ -434,7 +364,6 @@ if AutoCollectChests.Text == "Auto Collect Chests (On)" then
 AutoCollectChests.Text = "Auto Collect Chests (Off)"
 AutoCollectChests.BackgroundColor3 = Color3.fromRGB(255, 0, 0)
 _G.Collect = false
-log("Coleta automática de baús desativada.")
 end
 end
 end)
@@ -653,26 +582,28 @@ if AutoOpenAllChests.Text == "Auto Open Chests (Off)" then
 AutoOpenAllChests.Text = "Auto Open Chests (On)"
 AutoOpenAllChests.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
 _G.OpenAllChests = true
-while _G.OpenAllChests == true do wait(1)
--- Código para coleta automática, ignorando baús proibidos
-for i, v in pairs(game:GetService("Workspace").chests:GetChildren()) do
-    if v:IsA("BasePart") and not isCoordenadaProibida(v.Position) then
-        fireproximityprompt(v.ProximityPrompt)
-    else
-        print("Baú nas coordenadas proibidas. Ignorando.")
+while _G.OpenAllChests == true do
+    wait(1)  -- Espera 1 segundo entre as ações
+
+    -- Mover baús coletados para o personagem
+    for i, v in pairs(game.Players.LocalPlayer:FindFirstChildOfClass("Backpack"):GetChildren()) do
+        -- Verifica se o item é um baú
+        if v.Name == "Chest" or v.Name == "Dark Chest" or v.Name == "Light Chest" then
+            v.Parent = game.Players.LocalPlayer.Character  -- Move o baú para o personagem
+            print("Baú movido para o personagem: " .. v.Name)  -- Imprime a ação
+        end
+    end
+
+    -- Ativar baús que foram movidos para o personagem
+    for i, v in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
+        -- Verifica se o item é um baú
+        if v.Name == "Chest" or v.Name == "Dark Chest" or v.Name == "Light Chest" then
+            v:Activate()  -- Ativa o baú para abri-lo
+            print("Baú aberto: " .. v.Name)  -- Imprime o nome do baú aberto
+        end
     end
 end
-    for i,v in pairs(game.Players.LocalPlayer:FindFirstChildOfClass("Backpack"):GetChildren()) do
-		if v.Name == "Chest" or v.Name == "Dark Chest" or v.Name == "Light Chest" then
-			v.Parent = game.Players.LocalPlayer.Character
-			end
-end
-for i,v in pairs(game.Players.LocalPlayer.Character:GetChildren()) do
-		if v.Name == "Chest" or v.Name == "Dark Chest" or v.Name == "Light Chest" then
-			v:Activate()
-			end
-end
-end
+
 else
 if AutoOpenAllChests.Text == "Auto Open Chests (On)" then
 AutoOpenAllChests.Text = "Auto Open Chests (Off)"
