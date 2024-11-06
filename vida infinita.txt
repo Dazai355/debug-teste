@@ -3,17 +3,20 @@ game.Workspace.FallenPartsDestroyHeight = -50000
 -- Função para verificar se a posição é proibida
 function isCoordenadaProibida(posicao)
     -- Defina as coordenadas exatas do baú proibido
-    local coordenadaX = -4445.72  -- Substitua pela posição real do baú proibido
-    local coordenadaY = 114.40
-    local coordenadaZ = -5319.55
-    local margemTolerancia = 5  -- Ajuste conforme necessário
-
-    -- Verifica se a posição está dentro do limite de tolerância
-    return (math.abs(posicao.X - coordenadaX) <= margemTolerancia) and
-           (math.abs(posicao.Y - coordenadaY) <= margemTolerancia) and
-           (math.abs(posicao.Z - coordenadaZ) <= margemTolerancia)
-end
-
+        local coordenadasProibidas = {
+            Vector3.new(-4445.72, 114.40, -5319.55),
+            -- Adicione outras coordenadas se necessário
+        }
+        
+        
+            local margemTolerancia = 5
+            for _, coordenada in ipairs(coordenadasProibidas) do
+                if (posicao - coordenada).Magnitude <= margemTolerancia then
+                    return true
+                end
+            end
+            return false
+        end          
 
 _G.Teleport = false
 _G.Collect = false
@@ -158,11 +161,30 @@ Part3:Destroy()
 Part4:Destroy()
 Part5:Destroy()
 Part6:Destroy()
-game.Players.LocalPlayer.Character.HumanoidRootPart:FindFirstChildOfClass("BodyVelocity"):Destroy()
-game.Players.LocalPlayer.Character.HumanoidRootPart:FindFirstChildOfClass("BodyGyro"):Destroy()
+local function destroyTemporaryObjects()
+    for _, obj in pairs(game.Players.LocalPlayer.Character.HumanoidRootPart:GetChildren()) do
+        if obj:IsA("BodyVelocity") or obj:IsA("BodyGyro") then
+            obj:Destroy()
+        end
+    end
+end
+
+-- No final de `TeleportToChests` e outras funções similares:
+destroyTemporaryObjects()
+
 wait(.1)
 game.Players.LocalPlayer.Character.HumanoidRootPart:FindFirstChildOfClass("BodyVelocity"):Destroy()
-game.Players.LocalPlayer.Character.HumanoidRootPart:FindFirstChildOfClass("BodyGyro"):Destroy()
+game.Players.LocalPlayer.Character.HumanoidRootPart:FindFirstChildOfClass("BodyGyro"):Destroy()local function destroyTemporaryObjects()
+    for _, obj in pairs(game.Players.LocalPlayer.Character.HumanoidRootPart:GetChildren()) do
+        if obj:IsA("BodyVelocity") or obj:IsA("BodyGyro") then
+            obj:Destroy()
+        end
+    end
+end
+
+-- No final de `TeleportToChests` e outras funções similares:
+destroyTemporaryObjects()
+
 end)
 
 Mini.Name = "Mini"
@@ -220,7 +242,9 @@ local BV = Instance.new("BodyVelocity",game.Players.LocalPlayer.Character.Humano
 		BG.CFrame = game.Workspace.CurrentCamera.CFrame
 		BV.MaxForce = Vector3.new(math.huge,math.huge,math.huge)
 BV.Velocity = game.Workspace.CurrentCamera.CFrame.LookVector * 0.0000000001
-
+local delay = math.max(tonumber(TeleportToChestsDelay.Text) or 0.1, 0.1)
+wait(delay)
+        
 _G.Teleport = true
 while _G.Teleport == true do wait(TeleportToChestsDelay.Text)
     for i,v in pairs(game:GetService("Workspace").chests:GetChildren()) do
@@ -233,6 +257,7 @@ while _G.Teleport == true do wait(TeleportToChestsDelay.Text)
             Part5.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,2,-5.5)
             Part6.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,7.5,0)
             wait(TeleportToChestsDelay.Text)
+        
         else
             print("Tentativa de teleporte para baú nas coordenadas proibidas. Ignorando.")
         end
@@ -248,6 +273,9 @@ Part4.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFra
 Part5.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,2,-5.5)
 Part6.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,7.5,0)
 wait(TeleportToChestsDelay.Text)
+else
+    print("Teleportando para baú: " .. (v.Name or "Desconhecido"))
+
 end
 end
 game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = CFrame.new(1,100000,1)
@@ -327,6 +355,11 @@ AutoCollectChests.MouseButton1Up:Connect(function()
 if AutoCollectChests.Text == "Auto Collect Chests (Off)" then
 AutoCollectChests.Text = "Auto Collect Chests (On)"
 AutoCollectChests.BackgroundColor3 = Color3.fromRGB(0, 255, 0)
+
+local delay = math.max(tonumber(AutoCollectDelay.Text) or 0.2, 0.2)
+wait(delay)
+
+
 _G.Collect = true
 while _G.Collect == true do wait(AutoCollectDelay.Text)
     for i, v in pairs(game:GetService("Workspace").chests:GetChildren()) do
@@ -345,7 +378,7 @@ while _G.Collect == true do wait(AutoCollectDelay.Text)
 
 -- Código para teleporte, ignorando baús proibidos
 for i, v in pairs(game:GetService("Workspace").chests:GetChildren()) do
-    if v:IsA("BasePart") and not isCoordenadaProibida(v.Position) then
+    if v and v:IsA("BasePart") and not isCoordenadaProibida(v.Position) then
         fireproximityprompt(v.ProximityPrompt)
     else
         print("Baú nas coordenadas proibidas. Ignorando.")
