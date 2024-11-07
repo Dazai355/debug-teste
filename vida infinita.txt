@@ -1,7 +1,7 @@
 game.Workspace.FallenPartsDestroyHeight = -50000
 
 -- Função para verificar se a posição é proibida
-function isCoordenadaProibida(posicao)
+
     -- Defina as coordenadas exatas do baú proibido
         local coordenadasProibidas = {
             Vector3.new(-4445.72, 114.40, -5319.55),
@@ -9,19 +9,29 @@ function isCoordenadaProibida(posicao)
         }
         
         
-            local margemTolerancia = 5
-            for _, coordenada in ipairs(coordenadasProibidas) do
-                if (posicao - coordenada).Magnitude <= margemTolerancia then
+        local function isCoordenadaProibida(posicao)
+            for _, coordenada in ipairs(ScriptConfig.CoordenadasProibidas) do
+                if (posicao - coordenada).Magnitude <= ScriptConfig.MargemTolerancia then
                     return true
                 end
             end
             return false
-        end          
+        end
+                
 
-_G.Teleport = false
-_G.Collect = false
-_G.OpenAllChests = false
-_G.Delete = false
+        local ScriptConfig = {
+            Teleport = false,
+            Collect = false,
+            OpenAllChests = false,
+            Delete = false,
+            DelayTeleport = 0.2,
+            DelayCollect = 0.2,
+            CoordenadasProibidas = {
+                Vector3.new(-4445.72, 114.40, -5319.55),
+            },
+            MargemTolerancia = 5,
+        }
+        
 
 if game:GetService("CoreGui"):FindFirstChild("AutoChestsGui") then
     game:GetService("CoreGui"):FindFirstChild("AutoChestsGui"):Destroy()
@@ -32,6 +42,16 @@ if v.Name == "FloatPath" then
 v:Destroy()
 end
 end
+
+local function destroyTemporaryObjects()
+    local humanoidRoot = game.Players.LocalPlayer.Character.HumanoidRootPart
+    for _, obj in pairs(humanoidRoot:GetChildren()) do
+        if obj:IsA("BodyVelocity") or obj:IsA("BodyGyro") then
+            obj:Destroy()
+        end
+    end
+end
+
 
 local AutoChestsGui = Instance.new("ScreenGui")
 local Frame = Instance.new("Frame")
@@ -246,9 +266,12 @@ local delay = math.max(tonumber(TeleportToChestsDelay.Text) or 0.1, 0.1)
 wait(delay)
         
 _G.Teleport = true
-while _G.Teleport == true do wait(TeleportToChestsDelay.Text)
-    for i,v in pairs(game:GetService("Workspace").chests:GetChildren()) do
+local function teleportToChest()
+    for _, v in pairs(game:GetService("Workspace").chests:GetChildren()) do
         if v:IsA("BasePart") and not isCoordenadaProibida(v.Position) then
+            game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.CFrame
+            wait(ScriptConfig.DelayTeleport)
+            
             game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame = v.CFrame
             Part1.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,-3.5,0)
             Part2.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(-5.5,2,0)
@@ -257,7 +280,10 @@ while _G.Teleport == true do wait(TeleportToChestsDelay.Text)
             Part5.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,2,-5.5)
             Part6.CFrame = game.Players.LocalPlayer.Character.HumanoidRootPart.CFrame * CFrame.new(0,7.5,0)
             wait(TeleportToChestsDelay.Text)
-        
+            while ScriptConfig.Teleport do
+                teleportToChest()
+            end
+            
         else
             print("Tentativa de teleporte para baú nas coordenadas proibidas. Ignorando.")
         end
@@ -361,20 +387,22 @@ wait(delay)
 
 
 _G.Collect = true
-while _G.Collect == true do wait(AutoCollectDelay.Text)
-    for i, v in pairs(game:GetService("Workspace").chests:GetChildren()) do
-        -- Verifica se o item é um baú ou a "Candy"
-        if v:IsA("BasePart") and (v.Name == "Chest" or v.Name == "DarkChest_p" or v.Name == "Weeping Chest-p" or v.Name == "Candy") then
-            if v:FindFirstChild("ProximityPrompt") then  -- Verifica se o ProximityPrompt está presente
-                fireproximityprompt(v.ProximityPrompt)  -- Aciona o ProximityPrompt
-                print("Item coletado: " .. v.Name)  -- Imprime o nome do item coletado
-            else
-                print("ProximityPrompt não encontrado em " .. v.Name)  -- Imprime se o ProximityPrompt não foi encontrado
-            end
+local function autoCollectChests()
+    for _, v in pairs(game:GetService("Workspace").chests:GetChildren()) do
+        if v:IsA("BasePart") and v:FindFirstChild("ProximityPrompt") then
+            fireproximityprompt(v.ProximityPrompt)
+            print("Baú coletado:", v.Name)
+            wait(ScriptConfig.DelayCollect)
         else
-            print("Item ignorado: " .. v.Name)  -- Imprime caso o item não seja coletável
+            print("Baú ignorado ou sem ProximityPrompt:", v.Name)
+            while ScriptConfig.Collect do
+                autoCollectChests()
+            end
+            
         end
     end
+
+
 
 -- Código para teleporte, ignorando baús proibidos
 for i, v in pairs(game:GetService("Workspace").chests:GetChildren()) do
